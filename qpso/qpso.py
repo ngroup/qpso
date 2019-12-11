@@ -122,15 +122,19 @@ class QPSO(Swarm):
 class QDPSO(QPSO):
     def __init__(self, cf, size, dim, bounds, maxIters, g):
         super(QDPSO, self).__init__(cf, size, dim, bounds, maxIters)
+        self.bounds = bounds #save bound in the inner class
         self._g = g
 
     def kernel_update(self, **kwargs):
         for p in self._particles:
             for i in range(0, self._dim):
+                b = self.bounds[i]
                 u1 = random.uniform(0., 1.)
                 u2 = random.uniform(0., 1.)
                 u3 = random.uniform(0., 1.)
                 rand_sign = 1 if random.random() > 0.5 else -1
                 c = (u1 * p.best[i] + u2 * self._gbest[i]) / (u1 + u2)
                 L = (1 / self._g) * abs(p[i] - c)
-                p[i] = c + rand_sign * L * np.log(1. / u3)
+                p_i = c + rand_sign * L * np.log(1. / u3) #update particle position
+                f = lambda x : b[0] if x < b[0] else (b[1] if x > b[1] else x) #prevent the new particle's position out of bound
+                p[i] = f(p_i) #new particle position
